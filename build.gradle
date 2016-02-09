@@ -1,0 +1,123 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+plugins {
+    id "com.github.samueltbrown.cucumber" version "0.8"
+}
+
+ext {
+    groovyVersion = '2.3.6'
+    gebVersion = '0.10.0'
+    seleniumVersion = '2.43.1'
+    cucumberJvmVersion = '1.1.8'
+    firefoxDriverVersion = '2.43.1'
+    chromeDriverVersion = '2.10'
+    phantomJsVersion = '1.9.7'
+    envDetails = [
+            // Add environments here...
+            test1: [baseUrl: 'http://www.metapack.com']
+    ]
+}
+
+apply plugin: "groovy"
+apply plugin: "com.github.samueltbrown.cucumber"
+apply from: "gradle/eclipse/eclipse.gradle"
+apply from: "gradle/idea/idea.gradle"
+apply from: "gradle/ci.gradle"
+apply from: "gradle/osSpecificDownloads.gradle"
+
+repositories {
+    maven {
+        url 'http://artifactory.metadev.io/artifactory/local-repos/'
+    }
+    jcenter()
+}
+
+dependencies {
+    testCompile "org.codehaus.groovy:groovy-all:$groovyVersion"
+    testCompile "org.gebish:geb-core:$gebVersion"
+    testCompile "org.seleniumhq.selenium:selenium-api:$seleniumVersion"
+    testCompile "org.seleniumhq.selenium:selenium-support:$seleniumVersion"
+
+    testCompile "info.cukes:cucumber-core:$cucumberJvmVersion"
+    testCompile "info.cukes:cucumber-groovy:$cucumberJvmVersion"
+
+
+    // this supplies some pre-built cucumber steps for driving Geb,
+    // see https://github.com/tomdcc/geb-cucumber
+    testCompile "io.jdev.geb:geb-cucumber:0.2"
+
+    testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
+
+    // to fix the code compilation issues (unable to import various driver classes) in Eclipse / IntelliJ IDEA for  GebConfig.groovy
+    testCompile "org.seleniumhq.selenium:selenium-firefox-driver:$firefoxDriverVersion"
+    testCompile 'org.seleniumhq.selenium:selenium-chrome-driver:$seleniumVersion'
+    testCompile 'com.github.detro.ghostdriver:phantomjsdriver:1.1.0'
+
+    compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7'
+
+    // pick whichever drivers you want. We test against most of them here.
+    // see src/test/resources/GebConfig.groovy for how to switch between them
+    cucumberRuntime "org.seleniumhq.selenium:selenium-firefox-driver:$firefoxDriverVersion"
+    cucumberRuntime "org.seleniumhq.selenium:selenium-chrome-driver:$seleniumVersion"
+    cucumberRuntime("com.github.detro.ghostdriver:phantomjsdriver:1.1.0") {
+        // phantomjs driver pulls in a different selenium version
+        transitive = false
+    }
+}
+
+cucumber {
+    formats = [
+            'pretty', // prints nice format out to the console
+            'html:build/reports/cucumber', // html
+            'junit:build/cucumber.xml' // junit format for integration with CI tool etc
+    ]
+    // src/cucumber/resources is included automatically
+    glueDirs = [
+            "classpath:io.jdev.geb.cucumber.steps.groovy.en"
+    ]
+    tags = (System.properties['cucumber.options'] ?: '~@wip').minus('--tags ').split('--tags')
+
+    // Temp directory to be used to store downloaded PDF labels.
+    def tempDir = File.createTempDir()
+
+    jvmOptions {
+        systemProperties(['geb.env': System.properties['geb.env']])
+        systemProperties(['webdriver.chrome.driver': System.properties['webdriver.chrome.driver']])
+        systemProperties(['phantomjs.binary.path': System.properties['phantomjs.binary.path']])
+        systemProperties(['geb.build.baseUrl': System.properties['geb.build.baseUrl'] ?: 'http://dm-delta.metapack.com'])
+        systemProperties(['linux-unix-headless-mode': System.properties['linux-unix-headless-mode']])
+        systemProperties(['ff-binary-file': System.properties['ff-binary-file']])
+
+        // Set the connection details by desired environment.
+        def defaultEnv = "test1"
+        envDetails[System.getProperty('env', defaultEnv)]?.with {
+            systemProperties(['geb.build.baseUrl': baseUrl])
+        }
+
+
+        systemProperties(['temporaryDir': tempDir])
+    }
+}
+
+tasks.cucumber {
+
+    doFirst {
+        if(System.properties['linux-unix-headless-mode']== 'true')
+            startXvfb()
+    }
+
+    doLast{
+        if(System.properties['linux-unix-headless-mode'] == 'true')
+            stopXvfb()
+    }
+}
+
+def startXvfb(){
+    println "echo 'Starting Xvfb (to run tests in headless mode) ......... "
+    "Xvfb :10".execute()
+}
+
+def stopXvfb(){
+    println "echo 'Stpping Xvfb process ........ "
+    "killall Xvfb".execute()
+}
