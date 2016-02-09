@@ -96,18 +96,10 @@ The following tree describes how this project is structured and an indication of
         └── resources     - Configuration for tests
 ```
 
-## Technical debt
-
-This project is on-going however there are issues that have arisen during implementation that whilst they work should be reviewed and refactored at the earliest opportunity.
-
 - **Selectors** - Whilst this is strictly not an issue with this project and more to do with construction of the DM GUI web app. No or very little semantic id's have been used in the HTML markup, which as a result means that the selectors being used are very brittle. Refer to [DMC-56] for details.
 
 
-[DM]: http://www.metapack.com "Delivery Manager"
 [Gherkin]: https://github.com/cucumber/cucumber/wiki/Gherkin "Gherkin Domain Specific Language"
 [Geb]: http://geb.codehaus.org/ "Geb - Groovy Browser Automation"
 [Cucumber-JVM]: http://cukes.info/install-cucumber-jvm.html "Cucumber JVM" 
-[WSlite]: https://github.com/jwagenleitner/groovy-wslite "Groovy WSlite"
 [The Book Of Geb]: http://www.gebish.org/manual/current/ "The Book Of Geb"
-[DMC-56]: https://metapack.atlassian.net/browse/DMC-56
-[DMC1]: https://metapack.atlassian.net/wiki/display/MOR/QA+environments "Formally known as DMTSTCIS1"
