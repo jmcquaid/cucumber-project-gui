@@ -94,10 +94,7 @@ The following tree describes how this project is structured and an indication of
         │   └── pages
         │       └── gui   - Page objects to define key parts of a page
         └── resources     - Configuration for tests
-```
-
-- **Selectors** - Whilst this is strictly not an issue with this project and more to do with construction of the DM GUI web app. No or very little semantic id's have been used in the HTML markup, which as a result means that the selectors being used are very brittle. Refer to [DMC-56] for details.
-
+``` 
 
 [Gherkin]: https://github.com/cucumber/cucumber/wiki/Gherkin "Gherkin Domain Specific Language"
 [Geb]: http://geb.codehaus.org/ "Geb - Groovy Browser Automation"
